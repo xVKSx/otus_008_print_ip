@@ -43,3 +43,6 @@
 **/CMakeScripts
 **/compile_commands.json
 
+# Project structure
+doc/html
+doc/man
