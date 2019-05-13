@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace Ip_NS {
     class DoxygenExampleClass {
     public:

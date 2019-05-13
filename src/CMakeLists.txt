@@ -10,25 +10,20 @@ set_target_properties(print_ip PROPERTIES
         COMPILE_OPTIONS "-Wpedantic;-Wall;-Wextra"
         )
 
-#include_directories(ip_address tool)
-#
-#add_library(ip_address_lib
-#        ip_address/ip.h
-#        ip_address/ip.cpp
-#        )
-#
-#add_library(tool_dir
-#        tool/tokenize.h
-#        tool/tokenize.cpp
-#        )
-#
-#target_link_libraries(ip_filter ip_address_lib tool_dir)
+include_directories(ip)
+
+add_library(ip_lib
+        ip/print.h
+        ip/print.cpp
+        )
+
+target_link_libraries(print_ip ip_lib)
 
 install(TARGETS print_ip RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-set(CPACK_PACKAGE_CONTACT vks.skv@yandex.ru)
+set(CPACK_PACKAGE_CONTACT vks.skv@rambler.ru)
 set(CPACK_PACKAGE_NAME print_ip)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
