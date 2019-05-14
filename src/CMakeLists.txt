@@ -12,12 +12,9 @@ set_target_properties(print_ip PROPERTIES
 
 include_directories(ip)
 
-add_library(ip_lib
-        ip/print.h
-        ip/print.cpp
-        )
-
-target_link_libraries(print_ip ip_lib)
+#add_library(ip_lib  ip/print.h)
+#
+#target_link_libraries(print_ip ip_lib)
 
 install(TARGETS print_ip RUNTIME DESTINATION bin)
 
