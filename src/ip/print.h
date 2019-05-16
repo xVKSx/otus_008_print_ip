@@ -1,3 +1,12 @@
+/**
+ * @brief преобразование в ip формат данные вида:
+ *   - строка;
+ *   - целочисленное значение;
+ *   - контенер vector и list;
+ *   - tuple (с учетом того, что все элементы одного типа)
+ * @author VKS
+ */
+
 #pragma once
 
 #include <type_traits>
@@ -7,69 +16,56 @@
 #include <tuple>
 #include <sstream>
 
+#include "../utility/type_traits.h"
 
 namespace Ip_NS {
 
-    template<typename _T>
-    struct is_string : std::false_type {
-    };
+    ///print_tuple_item
 
-    template<>
-    struct is_string<std::string> : std::true_type {
-    };
-
-    template<typename _T>
-    struct is_container : std::false_type {
-    };
-
-    template<typename ... Args>
-    struct is_container<std::vector<Args...>> : std::true_type {
-    };
-
-    template<typename ... Args>
-    struct is_container<std::list<Args...>> : std::true_type {
-    };
-
-    template<typename ...E>
-    struct are_same_type;
-
-    template<typename E1, typename E2, typename ...E>
-    struct are_same_type<E1, E2, E...> {
-        static const bool value = std::is_same<E1, E2>::value && are_same_type<E2, E...>::value;
-    };
-
-    template<typename E1, typename E>
-    struct are_same_type<E1, E> {
-        static const bool value = std::is_same<E1, E>::value;
-    };
-
-    template<typename ...E>
-    using are_same_type_v = typename are_same_type<E...>::value;
-
-    template<size_t index, size_t index_max, typename... Args>
+    /**
+     * @brief Формирование строки по-элементно
+     * @tparam _idx
+     * @tparam _max_idx
+     * @tparam Args
+     */
+    template<size_t _idx, size_t _max_idx, typename ...Args>
     struct print_tuple_item {
         std::string operator()(const std::tuple<Args...> &tuple) {
             std::stringstream ss;
-            if (index != 0) {
+            if (_idx != 0) {
                 ss << ".";
             }
-            ss << std::get<index>(tuple);
-            ss << print_tuple_item<index + 1, index_max, Args...>{}(tuple);
+            ss << std::get<_idx>(tuple);
+            ss << print_tuple_item<_idx + 1, _max_idx, Args...>{}(tuple);
 
             return ss.str();
         }
     };
 
-    template<size_t index_max, typename... Args>
-    struct print_tuple_item<index_max, index_max, Args...> {
+    /**
+     * @tparam index_max
+     * @tparam Args
+     */
+    template<size_t _max_idx, typename ...Args>
+    struct print_tuple_item<_max_idx, _max_idx, Args...> {
         std::string operator()(const std::tuple<Args...> &) {
             return "";
         }
     };
 
-    template<typename T>
-    typename std::enable_if_t<std::__is_integral_helper<T>::value, std::string>
-    print_ip(const T &ip) {
+    /// print_ip
+
+    /**
+     * @brief Приведение челочисленного значение к формату ipv4
+     * @tparam _T челочисленного значение
+     * @param ip
+     * @return std::string
+     * @todo необходимо разобраться, какое поведение при переполнении.
+     * значние должно приводить к 123.45.67.89.101.112.131.41 ?
+     */
+    template<typename _T>
+    typename std::enable_if_t<std::__is_integral_helper<_T>::value, std::string>
+    print_ip(const _T &ip) {
         std::stringstream ss;
 
         ss << ((ip >> 24) & 0xff) << ".";
@@ -80,15 +76,28 @@ namespace Ip_NS {
         return ss.str();
     }
 
-    template<typename T>
-    typename std::enable_if_t<is_string<std::remove_const_t<T>>::value, std::string>
-    print_ip(const T &ip) {
+    /**
+     * @brief Приведение строки к формату ipv4
+     * @tparam _T строка
+     * @param ip
+     * @return std::string фактически возврат значения
+     * @todo необходимо понять, что реализация через type_traits имеет место быть
+     */
+    template<typename _T>
+    typename std::enable_if_t<is_string<std::remove_const_t<_T>>::value, std::string>
+    print_ip(const _T &ip) {
         return ip;
     }
 
-    template<typename T>
-    typename std::enable_if_t<is_container<T>::value, std::string>
-    print_ip(const T &ip) {
+    /**
+     * @brief Приведение значений представленных в виде вектор или списка к формату ipv4
+     * @tparam _T std::vector | std::list
+     * @param ip
+     * @return std::string
+     */
+    template<typename _T>
+    typename std::enable_if_t<is_container<_T>::value, std::string>
+    print_ip(const _T &ip) {
         std::stringstream ss;
 
         for (auto it = ip.begin(); it != ip.end();) {
@@ -99,11 +108,17 @@ namespace Ip_NS {
         return ss.str();
     }
 
-    template<typename ...E>
-    typename std::enable_if_t<are_same_type<E...>::value, std::string>
-    print_ip(const std::tuple<E...> &ip) {
-        static_assert(sizeof...(E) == 4, "No IP");
-        return print_tuple_item<0, sizeof...(E), E...>()(ip);
+    /**
+     * @brief Приведение значения tuple<...> к формату ipv4
+     * @tparam _E
+     * @param ip
+     * @return std::string
+     */
+    template<typename ..._E>
+    typename std::enable_if_t<are_same_type<_E...>::value, std::string>
+    print_ip(const std::tuple<_E...> &ip) {
+        static_assert(sizeof...(_E) == 4, "No IP");
+        return print_tuple_item<0, sizeof...(_E), _E...>()(ip);
     }
 
 }
